@@ -1,6 +1,8 @@
 import shutil
 import os
 
+from block_markdown import markdown_to_html_node
+from htmlnode import HTMLNode
 from textnode import TextNode
 
 def copy_files(src, dst):
@@ -31,8 +33,40 @@ def reset_public():
     print(f"Cleared path {path}")
 
 
+def extract_title(markdown):
+    html = markdown_to_html_node(markdown)
+    return extract_title_from_html(html)
 
+def extract_title_from_html(html:HTMLNode):
+    if html.tag == 'h1':
+        return html.value
+    
+    if html.children is None:
+        return None
 
+    for child in html.children:
+        if extract_title_from_html(child) is not None:
+            return child.value
+    raise Exception('markdown has no title')
+
+def generate_page(from_path, template_path, dest_path):
+    print(f"Generating page from {from_path} to {dest_path} using {template_path}")
+    
+    f = open(from_path)
+    markdown = f.read()
+    f.close()
+
+    f = open(template_path)
+    template = f.read()
+    f.close()
+
+    html = markdown_to_html_node(markdown).to_html()
+    title = extract_title(markdown)
+    full_html = template.replace('{{ Title }}', title).replace('{{ Content }}', html)
+
+    os.makedirs(dest_path, exist_ok=True)
+    with open(dest_path, 'w') as f:
+        print(full_html, file=f)
 
 def main():
     src = os.path.join(os.path.curdir, 'static')
@@ -42,6 +76,8 @@ def main():
     print("clearing path")
     reset_public()
     copy_files(src, dst)
+
+    generage_page('content/index.md', 'template.html', 'public/index.html') 
 
 
     tn = TextNode('This is a text node', 'bold', 'https://www.boot.dev')

@@ -109,13 +109,13 @@ def create_code_node(block):
     lines = block.split('\n')
     html_nodes = []
     for line in lines:
-        html_nodes.append(text_node_to_html_node(text_to_text_node(line)))
+        html_nodes.append(text_node_to_html_node(text_to_text_nodes(line)))
     return ParentNode(tag='pre', children=[ParentNode(tag='code', children=html_nodes)])
 
 def create_heading_node(block):
     text = block.lstrip('#')
     num = len(block) - len(text)
-    return ParentNode(tag=f'h{len(num)}', children=text_node_to_html_node(text_to_text_nodes(text)))
+    return ParentNode(tag=f'h{num}', children=text_node_to_html_node(text_to_text_nodes(text)))
 
 def create_paragraph_node(block):
     return ParentNode(tag='p', children=text_to_text_nodes(text_to_text_nodes(block)))
