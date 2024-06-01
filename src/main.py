@@ -35,7 +35,9 @@ def reset_public():
 
 def extract_title(markdown):
     html = markdown_to_html_node(markdown)
-    return extract_title_from_html(html)
+    title = extract_title_from_html(html)
+    print(f"Extracted title: {title}")
+    return title
 
 def extract_title_from_html(html:HTMLNode):
     if html.tag == 'h1':
@@ -77,7 +79,7 @@ def main():
     reset_public()
     copy_files(src, dst)
 
-    generage_page('content/index.md', 'template.html', 'public/index.html') 
+    generate_page('content/index.md', 'template.html', 'public/index.html') 
 
 
     tn = TextNode('This is a text node', 'bold', 'https://www.boot.dev')

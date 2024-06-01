@@ -76,7 +76,7 @@ def markdown_to_html_node(markdown):
             case BlockType.block_type_ol:
                 nodes.append(create_ol_node(block))
             case BlockType.block_type_code:
-                nodes.append(create_code_node(block))
+                nodes.append(create_code_node(block.strip('`')))
             case block_type if 'heading' in block_type:
                 nodes.append(create_heading_node(block))
             case _:
@@ -95,28 +95,36 @@ def create_ul_node(block):
     lines = block.split('\n')
     html_nodes = []
     for line in lines:
-        html_nodes.append(ParentNode(tag='li',children=text_node_to_html_node(text_to_text_nodes(line))))
+        children = []
+        text_nodes = text_to_text_nodes(line)
+        for node in text_nodes:
+            children.append(text_node_to_html_node(node))
+        html_nodes.append(ParentNode(tag='li',children=children))
     return ParentNode(tag='ul', children=html_nodes)
 
 def create_ol_node(block):
     lines = block.split('\n')
     html_nodes = []
     for line in lines:
-        html_nodes.append(ParentNode(tag='li',children=text_node_to_html_node(text_to_text_nodes(line))))
+        children = []
+        text_nodes = text_to_text_nodes(line)
+        for node in text_nodes:
+            children.append(text_node_to_html_node(node))
+        html_nodes.append(ParentNode(tag='li',children=children))
     return ParentNode(tag='ol', children=html_nodes)
 
 def create_code_node(block):
     lines = block.split('\n')
     html_nodes = []
     for line in lines:
-        html_nodes.append(text_node_to_html_node(text_to_text_nodes(line)))
+        html_nodes.append(map(text_node_to_html_node,text_to_text_nodes(line)))
     return ParentNode(tag='pre', children=[ParentNode(tag='code', children=html_nodes)])
 
 def create_heading_node(block):
     text = block.lstrip('#')
     num = len(block) - len(text)
-    return ParentNode(tag=f'h{num}', children=text_node_to_html_node(text_to_text_nodes(text)))
+    return ParentNode(tag=f'h{num}', children=map(text_node_to_html_node,text_to_text_nodes(text)))
 
 def create_paragraph_node(block):
-    return ParentNode(tag='p', children=text_to_text_nodes(text_to_text_nodes(block)))
+    return ParentNode(tag='p', children=map(text_to_text_nodes, text_to_text_nodes(block)))
     
