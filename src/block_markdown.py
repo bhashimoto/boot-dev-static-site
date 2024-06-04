@@ -1,4 +1,4 @@
-from htmlnode import ParentNode
+from htmlnode import HTMLNode, ParentNode
 from inline_markdown import text_node_to_html_node, text_to_text_nodes
 
 
@@ -17,7 +17,7 @@ class BlockType:
 
     
 
-def markdown_to_blocks(text):
+def markdown_to_blocks(text) -> list[str]:
     blocks = text.split('\n\n')
     filtered_blocks = []
     for block in blocks:
@@ -26,7 +26,7 @@ def markdown_to_blocks(text):
         filtered_blocks.append(block.strip())
     return filtered_blocks
 
-def block_to_block_type(block):
+def block_to_block_type(block) -> str:
     if block[0] == '#':
         return 'heading' + str(len(block) - len(block.lstrip('#')))
     
@@ -60,7 +60,7 @@ def block_to_block_type(block):
     return BlockType.block_type_paragraph
 
 
-def markdown_to_html_node(markdown):
+def markdown_to_html_node(markdown) -> HTMLNode:
     blocks = markdown_to_blocks(markdown)
     if len(blocks) == 0:
         raise ValueError("markdown must have at least one block")
@@ -76,55 +76,55 @@ def markdown_to_html_node(markdown):
             case BlockType.block_type_ol:
                 nodes.append(create_ol_node(block))
             case BlockType.block_type_code:
-                nodes.append(create_code_node(block.strip('`')))
+                nodes.append(create_code_node(block.strip('`').strip()))
             case block_type if 'heading' in block_type:
                 nodes.append(create_heading_node(block))
             case _:
                 nodes.append(create_paragraph_node(block))
     return ParentNode(tag='div', children=nodes)
 
+def text_to_children(text: str) -> list[HTMLNode]:
+    text_nodes = text_to_text_nodes(text)
+    children = []
+    for text_node in text_nodes:
+        html_node = text_node_to_html_node(text_node)
+        children.append(html_node)
+    return children
 
-def create_block_quote_node(block):
-    text_nodes = text_to_text_nodes(block)
-    html_nodes = []
-    for node in text_nodes:
-        html_nodes.append(text_node_to_html_node(node))
-    return ParentNode(tag='blockquote', children=html_nodes)
+def create_block_quote_node(block) -> ParentNode:
+    text = ''
+    for line in block.split('\n'):
+        text += line[1:]
+    children = text_to_children(text)
+    return ParentNode(tag='blockquote', children=children)
 
-def create_ul_node(block):
+def create_ul_node(block) -> ParentNode:
     lines = block.split('\n')
     html_nodes = []
     for line in lines:
-        children = []
-        text_nodes = text_to_text_nodes(line)
-        for node in text_nodes:
-            children.append(text_node_to_html_node(node))
+        children = text_to_children(line[2:].strip())
         html_nodes.append(ParentNode(tag='li',children=children))
     return ParentNode(tag='ul', children=html_nodes)
 
-def create_ol_node(block):
+def create_ol_node(block) -> ParentNode:
     lines = block.split('\n')
     html_nodes = []
     for line in lines:
-        children = []
-        text_nodes = text_to_text_nodes(line)
-        for node in text_nodes:
-            children.append(text_node_to_html_node(node))
+        children = text_to_children(line[2:].strip())
         html_nodes.append(ParentNode(tag='li',children=children))
     return ParentNode(tag='ol', children=html_nodes)
 
-def create_code_node(block):
-    lines = block.split('\n')
-    html_nodes = []
-    for line in lines:
-        html_nodes.append(map(text_node_to_html_node,text_to_text_nodes(line)))
-    return ParentNode(tag='pre', children=[ParentNode(tag='code', children=html_nodes)])
+def create_code_node(block) -> ParentNode:
+    children = text_to_children(block)
+    return ParentNode(tag='pre', children=[ParentNode(tag='code', children=children)])
 
-def create_heading_node(block):
+def create_heading_node(block) -> ParentNode:
     text = block.lstrip('#')
     num = len(block) - len(text)
-    return ParentNode(tag=f'h{num}', children=map(text_node_to_html_node,text_to_text_nodes(text)))
+    children = text_to_children(text)
+    return ParentNode(tag=f'h{num}', children=children)
 
-def create_paragraph_node(block):
-    return ParentNode(tag='p', children=map(text_to_text_nodes, text_to_text_nodes(block)))
+def create_paragraph_node(block) -> ParentNode:
+    children = text_to_children(block)
+    return ParentNode(tag='p', children=children)
     

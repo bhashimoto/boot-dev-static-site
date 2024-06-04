@@ -8,7 +8,7 @@ class HTMLNode:
     def to_html(self):
         raise NotImplementedError()
 
-    def props_to_html(self):
+    def props_to_html(self) -> str:
         if self.props:
             ret = []
             for prop in self.props:
@@ -20,7 +20,7 @@ class HTMLNode:
         text = ''
         if self.value:
             text += self.value
-        if self.children and len(self.children) > 0:
+        if self.children and len(list(self.children)) > 0:
             for child in self.children:
                 text += child.__repr__()
         if self.tag:
@@ -32,7 +32,7 @@ class LeafNode(HTMLNode):
     def __init__(self, tag=None, value=None, props=None):
         super().__init__(tag=tag, value=value, props=props, children=None)
 
-    def to_html(self):
+    def to_html(self) -> str:
         text = ''
         if self.value:
             text += self.value
@@ -44,12 +44,15 @@ class ParentNode(HTMLNode):
     def __init__(self, children, tag=None, props=None):
         super().__init__(children=children, tag=tag, props=props, value=None)
 
-    def to_html(self):
+    def to_html(self) -> str:
         if self.tag is None:
             raise ValueError("tag not provided. ParentNode must have a tag")
         if self.children is None or len(list(self.children)) == 0:
             raise ValueError("no children provided. ParentNode must have at least one child")
 
-        return f"<{' '.join([self.tag, self.props_to_html()]).strip() }>{''.join([child.to_html() for child in self.children])}</{self.tag}>"
+        children = []
+        for child in self.children:
+            children.append(child.to_html())
+        return f"<{' '.join([self.tag, self.props_to_html()]).strip() }>{''.join(children)}</{self.tag}>"
 
 
